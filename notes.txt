@@ -1,0 +1,49 @@
+
+Ora che il sensore è collegato, segui questi passi:
+
+## 1) Abilita I2C su Raspberry Pi
+Apri il terminale ed esegui:
+sudo raspi-config
+
+Vai su Interfacing Options > I2C > Enable
+Riavvia con:
+
+sudo reboot
+
+## 2) Installa le librerie per il BME280
+Dopo il riavvio, installa tutto il necessario:
+sudo apt update
+sudo apt-get install i2c-tools
+
+sudo apt install -y python3-pip python3-smbus python3-bme280
+
+
+## 3) Verifica che il sensore sia rilevato
+Digita:
+i2cdetect -y 1
+
+Dovresti vedere un numero esadecimale tipo 0x76 o 0x77, che è l’indirizzo del BME280. Se non lo vedi, verifica i collegamenti!
+If 77 is displayed, it means that the BME280 module is successfully connected to the Raspberry Pi.
+If ADDR is connected to GND76 it will print 76.
+
+## 4) Scrivere il codice Python per leggere i dati
+Ora creiamo uno script Python per leggere temperatura, umidità e pressione:
+import smbus2
+import bme280
+
+I2C_ADDRESS = 0x76  # Cambia in 0x77 se necessario
+
+## 5) Inizializza il bus I2C
+bus = smbus2.SMBus(1)
+calibration_params = bme280.load_calibration_params(bus, I2C_ADDRESS)
+
+## 6) Legge i dati dal sensore
+data = bme280.sample(bus, I2C_ADDRESS, calibration_params)
+
+print(f"Temperatura: {data.temperature:.2f}°C")
+print(f"Umidità: {data.humidity:.2f}%")
+print(f"Pressione: {data.pressure:.2f} hPa")
+
+# DOCKER
+sudo docker build -t bme280-sensor .
+sudo docker run --privileged --device /dev/i2c-1 bme280-sensor
